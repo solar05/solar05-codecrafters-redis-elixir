@@ -31,15 +31,18 @@ defmodule Server do
   end
 
   defp serve(socket) do
-    socket
-    |> read_line()
-    |> write_line(socket)
+    Task.async(fn ->
+      socket
+      |> read_line()
+      |> write_line(socket)
 
-    serve(socket)
+      serve(socket)
+    end)
   end
 
   defp read_line(socket) do
     {:ok, _data} = :gen_tcp.recv(socket, 0)
+
     # IO.inspect(data)
     "+PONG\r\n"
   end
