@@ -41,13 +41,23 @@ defmodule Server do
   end
 
   defp read_line(socket) do
-    {:ok, _data} = :gen_tcp.recv(socket, 0)
+    {:ok, raw_data} = :gen_tcp.recv(socket, 0)
 
-    # IO.inspect(data)
-    "+PONG\r\n"
+    splitted_data = String.split(raw_data, "\r\n", trim: true)
+    command = Enum.take(splitted_data, 3) |> Enum.join() |> String.upcase()
+
+    execute_command(command, splitted_data)
   end
 
   defp write_line(line, socket) do
     :gen_tcp.send(socket, line)
+  end
+
+  defp execute_command("*1$4PING", _) do
+    "+PONG\r\n"
+  end
+
+  defp execute_command("*2$4ECHO", [_, _, _, _ | arg]) do
+    "+#{arg}\r\n"
   end
 end
