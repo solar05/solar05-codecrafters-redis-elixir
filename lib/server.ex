@@ -61,7 +61,7 @@ defmodule Server do
   end
 
   defp execute_command("*3$3SET", [_, _, _ | args], state) do
-    [_, name, _, value | maybe_px] = args
+    [_, name, _, value | maybe_px] = args |> IO.inspect()
 
     expire_time =
       case maybe_px do
