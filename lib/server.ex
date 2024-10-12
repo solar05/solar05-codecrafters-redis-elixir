@@ -61,16 +61,30 @@ defmodule Server do
   end
 
   defp execute_command("*3$3SET", [_, _, _ | args], state) do
-    [_, name, _, value] = args
-    new_state = Map.put(state, name, value)
+    [_, name, _, value | maybe_px] = args
+
+    expire_time =
+      case maybe_px do
+        [] ->
+          nil
+
+        [expiry_milliseconds] ->
+          DateTime.utc_now() |> DateTime.add(expiry_milliseconds, :millisecond)
+      end
+
+    new_state = Map.put(state, name, %{value: value, expire_time: expire_time})
 
     {"+OK\r\n", new_state}
   end
 
   defp execute_command("*2$3GET", [_, _, _, _, arg], state) do
-    value = Map.get(state, arg)
-    length = String.length(value)
+    %{value: value, expire_time: expire_time} = Map.get(state, arg)
 
-    {"$#{length}\r\n#{value}\r\n", state}
+    if is_nil(expire_time) || expire_time >= DateTime.utc_now() do
+      length = String.length(value)
+      {"$#{length}\r\n#{value}\r\n", state}
+    else
+      {"$-1\r\n", state}
+    end
   end
 end
