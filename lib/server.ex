@@ -26,38 +26,51 @@ defmodule Server do
 
   defp loop_acceptor(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    serve(client)
+    serve(%{client: client, state: %{}})
     loop_acceptor(socket)
   end
 
-  defp serve(socket) do
+  defp serve(%{client: client, state: state}) do
     Task.async(fn ->
-      socket
-      |> read_line()
-      |> write_line(socket)
+      {response, new_state} = read_line(client, state)
+      write_line(response, client)
 
-      serve(socket)
+      serve(%{client: client, state: new_state})
     end)
   end
 
-  defp read_line(socket) do
+  defp read_line(socket, state) do
     {:ok, raw_data} = :gen_tcp.recv(socket, 0)
 
     splitted_data = String.split(raw_data, "\r\n", trim: true)
     command = Enum.take(splitted_data, 3) |> Enum.join() |> String.upcase()
 
-    execute_command(command, splitted_data)
+    execute_command(command, splitted_data, state)
   end
 
   defp write_line(line, socket) do
     :gen_tcp.send(socket, line)
   end
 
-  defp execute_command("*1$4PING", _) do
-    "+PONG\r\n"
+  defp execute_command("*1$4PING", _, state) do
+    {"+PONG\r\n", state}
   end
 
-  defp execute_command("*2$4ECHO", [_, _, _, _ | arg]) do
-    "+#{arg}\r\n"
+  defp execute_command("*2$4ECHO", [_, _, _, _ | arg], state) do
+    {"+#{arg}\r\n", state}
+  end
+
+  defp execute_command("*3$3SET", [_, _, _ | args], state) do
+    [_, name, _, value] = args
+    new_state = Map.put(state, name, value)
+
+    {"+OK\r\n", new_state}
+  end
+
+  defp execute_command("*2$3GET", [_, _, _, _, arg], state) do
+    value = Map.get(state, arg)
+    length = String.length(value)
+
+    {"$#{length}\r\n#{value}\r\n", state}
   end
 end
