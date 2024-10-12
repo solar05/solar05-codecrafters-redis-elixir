@@ -68,7 +68,7 @@ defmodule Server do
         [] ->
           nil
 
-        [expiry_milliseconds] ->
+        [_, _, _, expiry_milliseconds] ->
           DateTime.utc_now() |> DateTime.add(expiry_milliseconds, :millisecond)
       end
 
