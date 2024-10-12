@@ -43,7 +43,7 @@ defmodule Server do
     {:ok, raw_data} = :gen_tcp.recv(socket, 0)
 
     splitted_data = String.split(raw_data, "\r\n", trim: true)
-    command = Enum.take(splitted_data, 3) |> Enum.join() |> String.upcase() |> IO.inspect()
+    command = Enum.take(splitted_data, 3) |> Enum.join() |> String.upcase()
 
     execute_command(command, splitted_data, state)
   end
@@ -61,16 +61,17 @@ defmodule Server do
   end
 
   defp execute_command("*3$3SET", [_, _, _ | args], state) do
-    [_, name, _, value | maybe_px] = args |> IO.inspect()
+    [_, name, _, value] = args
+
+    new_state = Map.put(state, name, %{value: value, expire_time: nil})
+    {"+OK\r\n", new_state}
+  end
+
+  defp execute_command("*5$3SET", [_, _, _ | args], state) do
+    [_, name, _, value, _, _, _, expiry_milliseconds] = args
 
     expire_time =
-      case maybe_px do
-        [] ->
-          nil
-
-        [_, _, _, expiry_milliseconds] ->
-          DateTime.utc_now() |> DateTime.add(expiry_milliseconds, :millisecond)
-      end
+      DateTime.utc_now() |> DateTime.add(String.to_integer(expiry_milliseconds), :millisecond)
 
     new_state = Map.put(state, name, %{value: value, expire_time: expire_time})
 
