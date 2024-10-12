@@ -43,7 +43,7 @@ defmodule Server do
     {:ok, raw_data} = :gen_tcp.recv(socket, 0)
 
     splitted_data = String.split(raw_data, "\r\n", trim: true)
-    command = Enum.take(splitted_data, 3) |> Enum.join() |> String.upcase()
+    command = Enum.take(splitted_data, 3) |> Enum.join() |> String.upcase() |> IO.inspect()
 
     execute_command(command, splitted_data, state)
   end
