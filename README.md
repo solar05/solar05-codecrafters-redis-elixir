@@ -1,4 +1,4 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/e83bbe2e-d7c3-42fd-b1be-e1d18f4ff92e)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+[![progress-banner](https://backend.codecrafters.io/progress/redis/e83bbe2e-d7c3-42fd-b1be-e1d18f4ff92e)](https://app.codecrafters.io/users/solar05)
 
 This is a starting point for Elixir solutions to the
 ["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
